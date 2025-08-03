@@ -1,55 +1,97 @@
 import streamlit as st
 import sys
+import subprocess
 
-# Diagnostic Mode - Remove after issue is resolved
-st.title("CryptoShield Nigeria - Diagnostic Mode")
+st.title("CryptoShield Nigeria - Enhanced Diagnostic")
 st.write(f"Python version: {sys.version}")
 
-# Test individual imports with detailed error reporting
+# Check what's actually installed in the environment
+st.subheader("Environment Package Check")
+try:
+    result = subprocess.run([sys.executable, '-m', 'pip', 'list'], 
+                          capture_output=True, text=True, timeout=30)
+    if result.returncode == 0:
+        installed_packages = result.stdout
+        
+        # Check for plotly specifically
+        plotly_found = False
+        for line in installed_packages.split('\n'):
+            if 'plotly' in line.lower():
+                st.success(f"✅ Found: {line.strip()}")
+                plotly_found = True
+        
+        if not plotly_found:
+            st.error("❌ Plotly not found in pip list output")
+            
+        # Show first 20 packages for reference
+        st.text_area("Installed packages (first 20 lines):", 
+                    '\n'.join(installed_packages.split('\n')[:20]), height=200)
+    else:
+        st.error(f"pip list failed with return code: {result.returncode}")
+        
+except Exception as e:
+    st.error(f"Could not check installed packages: {e}")
+
+# Test imports
+st.subheader("Import Tests")
 imports_status = {}
 
-# Test NumPy
 try:
     import numpy as np
-    imports_status['NumPy'] = f"✅ Success - Version: {np.__version__}"
+    imports_status['NumPy'] = f"✅ Version: {np.__version__}"
 except ImportError as e:
     imports_status['NumPy'] = f"❌ Failed: {str(e)}"
 
-# Test Pandas
 try:
     import pandas as pd
-    imports_status['Pandas'] = f"✅ Success - Version: {pd.__version__}"
+    imports_status['Pandas'] = f"✅ Version: {pd.__version__}"
 except ImportError as e:
     imports_status['Pandas'] = f"❌ Failed: {str(e)}"
 
-# Test Plotly base
 try:
     import plotly
-    imports_status['Plotly Base'] = f"✅ Success - Version: {plotly.__version__}"
+    imports_status['Plotly Base'] = f"✅ Version: {plotly.__version__}"
+    
+    try:
+        import plotly.express as px
+        imports_status['Plotly Express'] = "✅ Success"
+    except ImportError as e:
+        imports_status['Plotly Express'] = f"❌ Failed: {str(e)}"
+        
 except ImportError as e:
     imports_status['Plotly Base'] = f"❌ Failed: {str(e)}"
-
-# Test Plotly Express (the failing import)
-try:
-    import plotly.express as px
-    imports_status['Plotly Express'] = "✅ Success"
-except ImportError as e:
-    imports_status['Plotly Express'] = f"❌ Failed: {str(e)}"
+    imports_status['Plotly Express'] = "❌ Plotly base not available"
 
 # Display results
 for package, status in imports_status.items():
     if "✅" in status:
-        st.success(status)
+        st.success(f"{package}: {status}")
     else:
-        st.error(status)
+        st.error(f"{package}: {status}")
 
-# Only continue with app if all imports work
-if all("✅" in status for status in imports_status.values()):
-    st.success("All imports successful! You can now remove this diagnostic code.")
-    # Your original app code would go here
+# Check requirements.txt content
+st.subheader("Requirements File Check")
+try:
+    with open('requirements.txt', 'r') as f:
+        requirements_content = f.read()
+    st.code(requirements_content, language='text')
+    
+    if 'plotly' in requirements_content.lower():
+        st.success("✅ Plotly found in requirements.txt")
+    else:
+        st.error("❌ Plotly not found in requirements.txt")
+        
+except FileNotFoundError:
+    st.error("❌ requirements.txt file not found!")
+
+# Final status
+all_good = all("✅" in status for status in imports_status.values())
+if all_good:
+    st.success("🎉 All imports successful! Remove this diagnostic code and restore your app.")
 else:
-    st.error("Some imports failed. Please resolve the issues above.")
+    st.error("❌ Some imports failed. Please resolve the issues above before proceeding.")
     st.stop()
+
 
 import streamlit as st
 import pandas as pd
