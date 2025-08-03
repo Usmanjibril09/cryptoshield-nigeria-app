@@ -1,3 +1,55 @@
+import streamlit as st
+import sys
+
+# Diagnostic Mode - Remove after issue is resolved
+st.title("CryptoShield Nigeria - Diagnostic Mode")
+st.write(f"Python version: {sys.version}")
+
+# Test individual imports with detailed error reporting
+imports_status = {}
+
+# Test NumPy
+try:
+    import numpy as np
+    imports_status['NumPy'] = f"✅ Success - Version: {np.__version__}"
+except ImportError as e:
+    imports_status['NumPy'] = f"❌ Failed: {str(e)}"
+
+# Test Pandas
+try:
+    import pandas as pd
+    imports_status['Pandas'] = f"✅ Success - Version: {pd.__version__}"
+except ImportError as e:
+    imports_status['Pandas'] = f"❌ Failed: {str(e)}"
+
+# Test Plotly base
+try:
+    import plotly
+    imports_status['Plotly Base'] = f"✅ Success - Version: {plotly.__version__}"
+except ImportError as e:
+    imports_status['Plotly Base'] = f"❌ Failed: {str(e)}"
+
+# Test Plotly Express (the failing import)
+try:
+    import plotly.express as px
+    imports_status['Plotly Express'] = "✅ Success"
+except ImportError as e:
+    imports_status['Plotly Express'] = f"❌ Failed: {str(e)}"
+
+# Display results
+for package, status in imports_status.items():
+    if "✅" in status:
+        st.success(status)
+    else:
+        st.error(status)
+
+# Only continue with app if all imports work
+if all("✅" in status for status in imports_status.values()):
+    st.success("All imports successful! You can now remove this diagnostic code.")
+    # Your original app code would go here
+else:
+    st.error("Some imports failed. Please resolve the issues above.")
+    st.stop()
 
 import streamlit as st
 import pandas as pd
